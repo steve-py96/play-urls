@@ -21,7 +21,38 @@ note: if integrated into a pipeline it's recommended to use [the playwright dock
 ## plain configuration
 
 import `defineConfig` from play-urls and configure everything required (it's typed, just check via intellisense ;), otherwise check [the types](src/types.ts)). <br />
-also this library allows a file-based url configuration via `defineUrl` and the `urlGlob`-option within the config
+also this library allows a file-based url configuration via `defineUrl` (recognized via `urlGlob`-option within the config)
+
+```ts
+// .play-urls.config.ts
+import { defineConfig } from 'play-urls/define';
+
+export default defineConfig({
+  browsers: ['chromium'],
+  browserConfig: {
+    headless: !!process.env.CI,
+  },
+  urlGlob: 'src/**/*.play-urls.spec.{js,ts}',
+  urls: [
+    {
+      url: 'https://example.com',
+      name: 'example-com',
+    },
+  ],
+});
+```
+
+```ts
+// some.play-urls.spec.ts
+import { defineUrl } from 'play-urls/define';
+
+export default defineUrl({
+  url: 'https://google.com',
+  name: 'example-com-from-file',
+});
+```
+
+note: it's highly recommended to use `.(test|spec).{js,ts}` or any other test-file naming convention to easily exclude these files from linters (such as ESLint) and show that they're testing files and no actual source files
 
 <br />
 <br />
@@ -73,27 +104,3 @@ npx play-urls --urlglob "src/**/*.my-url.spec.{ts,js}"
 ```
 
 note: if env and arg are passed at once (let's say `CONFIG=...` and `--config ...`) env will be preferred!
-
-<br />
-<br />
-
-## example config
-
-```ts
-// .play-urls.config.ts
-import { defineConfig } from 'play-urls/define';
-
-export default defineConfig({
-  browsers: ['chromium'],
-  browserConfig: {
-    headless: !!process.env.CI,
-  },
-  urlGlob: 'src/**/*.play-urls.spec.{js,ts}',
-  urls: [
-    {
-      url: 'https://example.com',
-      name: 'example-com',
-    },
-  ],
-});
-```
