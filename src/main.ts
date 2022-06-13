@@ -6,9 +6,8 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { defineConfig } from './define';
 
-export { run, defineConfig };
+export { run };
 
 // browser mapping
 const BROWSERS = {
@@ -36,7 +35,7 @@ const run = async (paramConfig?: Config | (() => Config | Promise<Config>)) => {
       });
 
     const re: LoadConfigResult<Config> = {
-      config: await defineConfig(paramConfig),
+      config: typeof paramConfig === 'function' ? await paramConfig() : paramConfig,
       sources: ['__paramConfig__'],
     };
 

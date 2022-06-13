@@ -58,3 +58,26 @@ CONFIG=my.config npx play-urls
 # via arg
 npx play-urls --config my.config
 ```
+
+<br />
+<br />
+
+## example config
+
+```ts
+// .play-urls.config.ts
+import { defineConfig } from 'play-urls/define';
+
+export default defineConfig({
+  browsers: ['chromium'],
+  browserConfig: {
+    headless: !!process.env.CI,
+  },
+  urls: [
+    {
+      url: 'https://example.com',
+      name: 'example-com',
+    },
+  ],
+});
+```
