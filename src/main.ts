@@ -197,5 +197,3 @@ const run = async (paramConfig?: Config | (() => Config | Promise<Config>)) => {
 
   process.exit(0);
 };
-
-run();
