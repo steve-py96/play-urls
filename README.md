@@ -80,10 +80,11 @@ run({
 
 ## CLI args / envs
 
-| arg         | env       | default             | definition                                                                         |
-| ----------- | --------- | ------------------- | ---------------------------------------------------------------------------------- |
-| `--config`  | `CONFIG`  | `.play-urls.config` | overwrite the filepath                                                             |
-| `--urlglob` | `URLGLOB` | - (none)            | overwrite the urlglob (this one is preferred over the config one if both provided) |
+| arg          | env        | default                 | definition                                                                          |
+| ------------ | ---------- | ----------------------- | ----------------------------------------------------------------------------------- |
+| `--config`   | `CONFIG`   | `.play-urls.config`     | overwrite the default filename/-path of the config                                  |
+| `--urlglob`  | `URLGLOB`  | - (none)                | overwrite the urlGlob (this one is preferred over the config one if both provided)  |
+| `--errorlog` | `ERRORLOG` | `play-urls-errors.json` | overwrite the errorLog (this one is preferred over the config one if both provided) |
 
 ```sh
 ## examples ##
@@ -101,6 +102,13 @@ URLGLOB="src/**/*.my-url.spec.{ts,js}" npx play-urls
 
 # via arg
 npx play-urls --urlglob "src/**/*.my-url.spec.{ts,js}"
+
+## errorLog
+# via env
+ERRORLOG="custom-errors.json" npx play-urls
+
+# via arg
+npx play-urls --errorlog "custom-errors.json"
 ```
 
 note: if env and arg are passed at once (let's say `CONFIG=...` and `--config ...`) env will be preferred!

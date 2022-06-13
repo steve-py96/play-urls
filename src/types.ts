@@ -60,7 +60,7 @@ interface Config {
    * @example
    *  join(process.cwd(), 'my-logs.json')
    */
-  errorLogs?: string;
+  errorLog?: string;
 
   /**
    * @description

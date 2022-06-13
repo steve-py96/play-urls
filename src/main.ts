@@ -18,7 +18,7 @@ const BROWSERS = {
   webkit,
 };
 
-const { CONFIG, URLGLOB } = process.env;
+const { CONFIG, URLGLOB, ERRORLOG } = process.env;
 
 const run = async (paramConfig?: Config | (() => Config | Promise<Config>)) => {
   const args = await yargs(hideBin(process.argv)).argv;
@@ -184,7 +184,10 @@ const run = async (paramConfig?: Config | (() => Config | Promise<Config>)) => {
     const { $0, _, ...relevantArgs } = args;
 
     await writeFile(
-      config.errorLogs || join(process.cwd(), 'play-urls-errors.json'),
+      ERRORLOG ||
+        (args as { errorlog?: string }).errorlog ||
+        config.errorLog ||
+        join(process.cwd(), 'play-urls-errors.json'),
       JSON.stringify({ logs, config, other: { envs: { URLGLOB, CONFIG }, args: relevantArgs } }),
       { encoding: 'utf-8' }
     );
