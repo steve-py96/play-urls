@@ -1,0 +1,11 @@
+*.tgz
+*.js
+*.d.ts
+*.tgz
+dist/
+!src/
+!cli.js
+node_modules/
+*.log
+*.json
+!package.json
