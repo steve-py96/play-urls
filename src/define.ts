@@ -5,7 +5,7 @@ export { defineConfig, defineUrl };
 const createResolver =
   <T>() =>
   (obj: T | (() => T | Promise<T>)) =>
-    typeof obj === 'function' ? obj() : obj;
+    typeof obj !== 'function' ? obj : (obj as () => T | Promise<T>)();
 
 const defineConfig = createResolver<Config>();
 
