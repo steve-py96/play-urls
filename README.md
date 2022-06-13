@@ -9,12 +9,11 @@ a simple and quick way to verify proper status/content of many urls
 
 ## how to use
 
-note: `playwright-core` is a peer dependency, if integrated into a project you might want to add a `postinstall: 'npx playwright install'` into your package.json or use [the playwright docker image](https://playwright.dev/docs/docker) for your pipeline!
-
-1. `npm i -D play-urls playwright-core` / `yarn -D play-urls playwright-core`
+1. `npm i -D play-urls` / `yarn -D play-urls`
 2. create a `.play-urls.config.ts` (or `.js`) in your project root
 3. define the config (see [plain configuration](#plain-configuration))
-4. run `npx playwright install` / `yarn run playwright install` (to install the required browsers)
+
+Note: if integrated into a pipeline it's recommended to use [the playwright docker image](https://playwright.dev/docs/docker) and install this package with `--ignore-scripts` flag
 
 <br />
 <br />
