@@ -154,5 +154,3 @@ const run = async (paramConfig?: Config | (() => Config | Promise<Config>)) => {
   console.log(`all ${config.urls.length} test${config.urls.length === 1 ? '' : 's'} passed!`);
   process.exit(0);
 };
-
-run();
