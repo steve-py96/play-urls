@@ -26,7 +26,7 @@ const run = async (paramConfig?: Config | (() => Config | Promise<Config>)) => {
         sources: [
           {
             files: [
-              '.play-url.config',
+              '.play-urls.config',
               process.env.CONFIG || '',
               (args.config || '') as string,
             ].filter(Boolean),
@@ -44,19 +44,19 @@ const run = async (paramConfig?: Config | (() => Config | Promise<Config>)) => {
 
   // no config file/paramConfig => error
   if (sources.length === 0) {
-    console.error('no play-url config file found!');
+    console.error('no play-urls config file found!');
     process.exit(1);
   }
 
   // no browsers => error
   if (!config?.browsers?.length) {
-    console.error('play-url config does not contain browsers!');
+    console.error('play-urls config does not contain browsers!');
     process.exit(1);
   }
 
   // no urls => error
   if (!config?.urls?.length) {
-    console.error('play-url config does not contain urls!');
+    console.error('play-urls config does not contain urls!');
     process.exit(1);
   }
 
@@ -142,7 +142,7 @@ const run = async (paramConfig?: Config | (() => Config | Promise<Config>)) => {
     console.warn(`${logs.length} / ${config.urls.length} tests failed!`);
 
     await writeFile(
-      config.errorLogs || join(process.cwd(), 'play-url-errors.json'),
+      config.errorLogs || join(process.cwd(), 'play-urls-errors.json'),
       JSON.stringify({ logs, config }),
       { encoding: 'utf-8' }
     );
@@ -150,6 +150,8 @@ const run = async (paramConfig?: Config | (() => Config | Promise<Config>)) => {
     process.exit(1);
   }
 
-  console.log(`all ${config.urls.length} test${config.urls.length === 1 ? '' : 's'} passed!`);
+  if (config.urls.length === 1) console.log(`the url test passed!`);
+  else console.log(`all ${config.urls.length} tests passed!`);
+
   process.exit(0);
 };
