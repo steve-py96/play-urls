@@ -1,6 +1,12 @@
-import type { Config } from './types';
+import type { Config, UrlConfig } from './types';
 
-export { defineConfig };
+export { defineConfig, defineUrl };
 
-const defineConfig = (config: Config | (() => Config | Promise<Config>)) =>
-  typeof config === 'function' ? config() : config;
+const createResolver =
+  <T>() =>
+  (obj: T | (() => T | Promise<T>)) =>
+    typeof obj === 'function' ? obj() : obj;
+
+const defineConfig = createResolver<Config>();
+
+const defineUrl = createResolver<UrlConfig>();

@@ -1,11 +1,13 @@
 import type { LoadConfigResult } from 'unconfig';
-import type { Config, Log } from './types';
+import type { Config, Log, UrlConfig } from './types';
 import { chromium, firefox, webkit } from 'playwright-core';
 import { loadConfig } from 'unconfig';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import glob from 'tiny-glob';
+import jiti from 'jiti';
 
 export { run };
 
@@ -16,6 +18,8 @@ const BROWSERS = {
   webkit,
 };
 
+const { CONFIG, URLGLOB } = process.env;
+
 const run = async (paramConfig?: Config | (() => Config | Promise<Config>)) => {
   const args = await yargs(hideBin(process.argv)).argv;
 
@@ -25,11 +29,7 @@ const run = async (paramConfig?: Config | (() => Config | Promise<Config>)) => {
       return loadConfig<Config>({
         sources: [
           {
-            files: [
-              '.play-urls.config',
-              process.env.CONFIG || '',
-              (args.config || '') as string,
-            ].filter(Boolean),
+            files: CONFIG || (args.config as string | undefined) || '.play-urls.config',
           },
         ],
       });
@@ -48,17 +48,48 @@ const run = async (paramConfig?: Config | (() => Config | Promise<Config>)) => {
     process.exit(1);
   }
 
+  // no config => error
+  if (!config) {
+    console.error('no play-urls config found!');
+    process.exit(1);
+  }
+
   // no browsers => error
-  if (!config?.browsers?.length) {
+  if (!config.browsers?.length) {
     console.error('play-urls config does not contain browsers!');
     process.exit(1);
   }
 
-  // no urls => error
-  if (!config?.urls?.length) {
-    console.error('play-urls config does not contain urls!');
+  const urlGlob = URLGLOB || (args as { urlglob?: string }).urlglob || config.urlGlob;
+
+  // no urls/urlGlob => error
+  if (!config.urls?.length && !urlGlob) {
+    console.error(
+      'play-urls config does not contain urls / an urlGlob! (one of either is required!)'
+    );
     process.exit(1);
   }
+
+  // store the urls in a new array since there could be globbed urls or config & globbed ones together even
+  const urls = (config.urls || []).slice();
+
+  if (urlGlob)
+    urls.push(
+      ...(await Promise.all(
+        (
+          await glob(urlGlob, { absolute: true })
+        ).map(
+          async (file) =>
+            jiti(file, {
+              cache: false,
+              esmResolve: true,
+              requireCache: false,
+              v8cache: false,
+              interopDefault: true,
+            })(file) as Promise<UrlConfig>
+        )
+      ))
+    );
 
   const logs: Array<Log> = [];
 
@@ -73,17 +104,18 @@ const run = async (paramConfig?: Config | (() => Config | Promise<Config>)) => {
 
     const browserInstance = await browser.launch(config.browserConfig);
 
-    for (const index in config.urls) {
-      const { url, valid, name, pageConfig, visitConfig } = config.urls[index];
+    for (const index in urls) {
+      const { url, valid, name, pageConfig, visitConfig } = urls[index];
 
       if (!url) {
         console.error(`${name || index} has no defined url!`);
         continue;
       }
 
-      // some things can't be awaited for, such as the response status
+      // some things can't be awaited for, such as the response status or randomly thrown errors
       const store = {
         status: -1,
+        error: '',
       };
       const page = await browserInstance.newPage(pageConfig);
 
@@ -92,17 +124,24 @@ const run = async (paramConfig?: Config | (() => Config | Promise<Config>)) => {
         store.status = res.status();
       });
 
-      await page.goto(url, visitConfig);
+      try {
+        await page.goto(url, visitConfig);
+      } catch (err) {
+        store.error = (err as Error).toString();
+      }
 
       // validate the page, either with user validation or a fallback status 200 check
       let isPageValid = false;
-      if (valid !== undefined)
-        isPageValid = await valid({
-          ...store,
-          browser: browserName,
-          page,
-        });
-      else isPageValid = store.status === 200;
+      // but only if there was no thrown error
+      if (!store.error) {
+        if (valid !== undefined)
+          isPageValid = await valid({
+            ...store,
+            browser: browserName,
+            page,
+          });
+        else isPageValid = store.status === 200;
+      }
 
       if (!isPageValid) {
         let screenshot: string | undefined = undefined;
@@ -126,7 +165,7 @@ const run = async (paramConfig?: Config | (() => Config | Promise<Config>)) => {
           browser: browserName,
           name,
           screenshot,
-          status: store.status,
+          ...store,
           url,
         });
       }
@@ -139,19 +178,24 @@ const run = async (paramConfig?: Config | (() => Config | Promise<Config>)) => {
 
   // errors => error + output log file
   if (logs.length > 0) {
-    console.warn(`${logs.length} / ${config.urls.length} tests failed!`);
+    console.warn(`${logs.length} / ${urls.length} tests failed!`);
+
+    // kick out irrelevant args for the logs...
+    const { $0, _, ...relevantArgs } = args;
 
     await writeFile(
       config.errorLogs || join(process.cwd(), 'play-urls-errors.json'),
-      JSON.stringify({ logs, config }),
+      JSON.stringify({ logs, config, other: { envs: { URLGLOB, CONFIG }, args: relevantArgs } }),
       { encoding: 'utf-8' }
     );
 
     process.exit(1);
   }
 
-  if (config.urls.length === 1) console.log(`the url test passed!`);
-  else console.log(`all ${config.urls.length} tests passed!`);
+  if (urls.length === 1) console.log(`the url test passed!`);
+  else console.log(`all ${urls.length} tests passed!`);
 
   process.exit(0);
 };
+
+run();

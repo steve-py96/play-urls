@@ -1,6 +1,6 @@
 import type { Page, Browser as PlaywrightBrowser, LaunchOptions } from 'playwright-core';
 
-export type { Config, Log };
+export type { Config, UrlConfig, Log };
 
 type Browser = 'chromium' | 'firefox' | 'webkit';
 
@@ -81,73 +81,89 @@ interface Config {
 
   /**
    * @description
-   *  the urls to test
+   *  a glob (proceeded via tiny-glob) to find play-url spec files (to define tests on fs base)
    *
+   * @default
+   *  undefined
+   * @example
+   *  '**\/*.(spec|test).{js,ts}'
+   */
+  urlGlob?: string;
+
+  /**
+   * @description
+   *  the urls to test (merged with urlGlobb-urls)
+   *
+   * @default
+   *  undefined
    * @example
    *  [{ url: 'https://example.com' }]
    */
-  urls: Array<{
-    /**
-     * @description
-     *  a name for the url (everything which doesn't fit into the regex `[a-z\d\-_]` will be removed if set as filepath)
-     *
-     * @default
-     *  undefined
-     * @example
-     *  'my-special-test'
-     */
-    name?: string;
+  urls?: Array<UrlConfig>;
+}
 
-    /**
-     * @description
-     *  the config to use for a freshly opened page
-     *
-     * @default
-     *  undefined
-     * @example
-     *  { colorScheme: 'light' }
-     */
-    pageConfig?: Parameters<PlaywrightBrowser['newPage']>[0];
+interface UrlConfig {
+  /**
+   * @description
+   *  a name for the url (everything which doesn't fit into the regex `[a-z\d\-_]` will be removed if set as filepath)
+   *
+   * @default
+   *  undefined
+   * @example
+   *  'my-special-test'
+   */
+  name?: string;
 
-    /**
-     * @description
-     *  the visit config to use on the visit of the url
-     *
-     * @default
-     *  undefined
-     * @example
-     *  { timeout: 5000 }
-     */
-    visitConfig?: Parameters<Page['goto']>[1];
+  /**
+   * @description
+   *  the config to use for a freshly opened page
+   *
+   * @default
+   *  undefined
+   * @example
+   *  { colorScheme: 'light' }
+   */
+  pageConfig?: Parameters<PlaywrightBrowser['newPage']>[0];
 
-    /**
-     * @description
-     *  the url to visit
-     *
-     * @example
-     *  https://example.com
-     */
-    url: string;
+  /**
+   * @description
+   *  the visit config to use on the visit of the url
+   *
+   * @default
+   *  undefined
+   * @example
+   *  { timeout: 5000 }
+   */
+  visitConfig?: Parameters<Page['goto']>[1];
 
-    /**
-     * @description
-     *  a validation function (can be async), returns something truthy if the page delivers the proper information
-     *
-     * @default
-     *  ({ status }) => status === 200
-     * @example
-     *  - ({ status }) => status < 400
-     *  - ({ browser, status }) => status === 200 && browser !== 'webkit'
-     *  - async ({ page }) => page.locator('body').evaluate(body => body.classList.contains('my-class'))
-     */
-    valid?: (params: ValidParams) => boolean | Promise<boolean>;
-  }>;
+  /**
+   * @description
+   *  the url to visit
+   *
+   * @example
+   *  https://example.com
+   */
+  url: string;
+
+  /**
+   * @description
+   *  a validation function (can be async), returns something truthy if the page delivers the proper information
+   *
+   * @default
+   *  ({ status }) => status === 200
+   * @example
+   *  - ({ status }) => status < 400
+   *  - ({ browser, status }) => status === 200 && browser !== 'webkit'
+   *  - async ({ page }) => page.locator('body').evaluate(body => body.classList.contains('my-class'))
+   */
+  valid?: (params: ValidParams) => boolean | Promise<boolean>;
 }
 
 interface Log {
   browser: Browser;
   name?: string;
   status: number;
+  error: string;
   screenshot?: string;
   url: string;
 }
