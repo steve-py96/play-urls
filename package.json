@@ -2,6 +2,7 @@
   "name": "play-urls",
   "version": "0.0.6",
   "scripts": {
+    "dev": "tsx watch src/main.ts",
     "build": "tsc --project ./tsconfig.json",
     "prepack": "cp dist/* .",
     "postpack": "ls dist | xargs rm",
@@ -19,7 +20,7 @@
     "@types/yargs": "^17.0.10",
     "prettier": "^2.6.2",
     "tsc": "^2.0.4",
-    "tsm": "^2.2.1",
+    "tsx": "^3.4.2",
     "typescript": "^4.7.3"
   },
   "main": "index.js",
